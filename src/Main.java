@@ -1,37 +1,55 @@
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.*;
+import java.text.Normalizer;
 import java.util.regex.Pattern;
 
 public class Main {
     public static void main(String[] args) {
-        Pattern Datum = Pattern.compile("^[0-9]{1,2}\\.\\s?[0-9]{1,2}\\.\\s?[0-9]{4}$");
-        Pattern Telefon = Pattern.compile("^[0-9]{3}\\s?[0-9]{3}\\s?[0-9]{3}$");
-        Pattern Email = Pattern.compile("^$");
+        Path vstup = Path.of("data","studenti_1000.csv");
+        Path vystup = Path.of("data","studenti_opraveno.csv");
 
-        Path soubor = Path.of("data", "studenti_1000.csv");
+        try (BufferedReader reader = Files.newBufferedReader(vstup, StandardCharsets.UTF_8);
+             BufferedWriter writer = Files.newBufferedWriter(vystup, StandardCharsets.UTF_8)) {
 
-        try (BufferedReader reader = Files.newBufferedReader(soubor)) {
-            String radek = reader.readLine();
+            String radek;
+            while ((radek = reader.readLine()) != null) {
+                String[] sloupce = radek.split(",");
+                if (sloupce.length < 4) continue;
 
-            if (radek != null) {
-                String[] cols = radek.split(",");
-                for (String col : cols) {
-                    String upravenaHodnota = col.trim();
 
-                    if (Datum.matcher(upravenaHodnota).matches()) {
-                        upravenaHodnota = upravenaHodnota.replace(" ", "");
-                    }
+                String jmeno = sloupce[0].trim();
+                String prijmeni = sloupce[1].trim();
 
-                    System.out.println(upravenaHodnota);
+
+                String datum = sloupce[2].trim().replaceAll("\\s+", "").replace(".", ". ");
+                datum = datum.replace(".  ", ". ").trim();
+
+
+                String telefon = sloupce[3].trim().replaceAll("\\s+", "");
+                if (telefon.length() == 9) {
+                    telefon = telefon.substring(0, 3) + " " + telefon.substring(3, 6) + " " + telefon.substring(6);
                 }
-            } else {
-                System.out.println("Soubor je prázdný.");
+
+
+                String email = odstranDiakritiku(sloupce[4].trim().toLowerCase());
+
+
+                String opravenyRadek = String.join(",", jmeno, prijmeni, datum, telefon, email);
+                writer.write(opravenyRadek);
+                writer.newLine();
             }
+            System.out.println("Soubor byl úspěšně opraven a uložen do: " + vystup.toAbsolutePath());
 
         } catch (IOException e) {
-            System.out.println("Chyba:" + e.getMessage());
+            System.err.println("Chyba při práci se souborem: " + e.getMessage());
         }
+    }
+
+
+    private static String odstranDiakritiku(String text) {
+        String nfdNormalizedString = Normalizer.normalize(text, Normalizer.Form.NFD);
+        Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
+        return pattern.matcher(nfdNormalizedString).replaceAll("");
     }
 }
