@@ -157,3 +157,89 @@ public class Main {
     }
 }
 /*
+
+/*
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.BufferedWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.text.Normalizer;
+import java.util.regex.Pattern;
+
+public class Main {
+
+    public static void main(String[] args) {
+        Pattern JMENO = Pattern.compile("^[\\p{L}][\\p{L}'-]{1,}$");
+        Pattern DATUM_PATTERN = Pattern.compile("^((3[0-1]|2[0-9]|1[0-9]|[1-9])\\. )" + "((1)[0-2]|[1-9]\\. )" + "[0-9]{1,4}$");
+        Pattern TELEFON_PATTERN = Pattern.compile("^[1-9]\\d{2} \\d{3} \\d{3}$");
+        Pattern EMAIL_PATTERN = Pattern.compile("^[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}$");
+        String hlavicka = "";
+        Path soubor = Path.of("data", "studenti_1000.csv");
+        Path vystupni_soubor = Path.of("data", "vystupni_soubor.csv");
+
+        try {
+            // Otevření BufferedWriter v try-with-resources
+            try (BufferedReader reader = Files.newBufferedReader(soubor);
+                 BufferedWriter writer = Files.newBufferedWriter(vystupni_soubor))
+            {
+                hlavicka = reader.readLine();
+
+                writer.write(hlavicka);
+                writer.newLine();
+                String radek;
+                while ((radek = reader.readLine()) != null) {  // ← uloží řádek do proměnné
+                    String[] cols = radek.split(",");           // ← použiješ tu samou proměnnou
+
+                    String jmeno    = cols[0].trim();
+                    String prijmeni = cols[1].trim();
+                    String datum    = cols[2].trim();
+                    String telefon  = cols[3].trim();
+                    String email    = cols[4].trim();
+
+                    if (DATUM_PATTERN.matcher(datum).matches()) {
+                        String[] datumSplit = datum.split("\\. "); // ← split podle tečky s mezerou
+                        datum = datumSplit[1] + ". " + datumSplit[0] + ". " + datumSplit[2];
+                    } else {
+                        String normalized = datum.replaceAll("[.\\-/]", " ").trim();
+                        String[] datumSplit = normalized.split("\\s+");
+                        if (datumSplit.length == 3) {
+                            if (datumSplit[0].length() == 4) {
+                                datum = Integer.parseInt(datumSplit[2]) + ". " + Integer.parseInt(datumSplit[1]) + ". " + datumSplit[0];
+                            } else {
+                                datum = Integer.parseInt(datumSplit[1]) + ". " + Integer.parseInt(datumSplit[0]) + ". " + datumSplit[2];
+                            }
+                        } else {
+                            System.out.println(datum);
+                            datum = "*";
+                        }
+                    }
+                    if (!TELEFON_PATTERN.matcher(telefon).matches()) {
+                        String cifry = telefon.replaceAll("[^0-9]", "");
+                        if (cifry.length() == 9 && !cifry.startsWith("0")) {
+                            telefon = cifry.substring(0, 3) + " "
+                                    + cifry.substring(3, 6) + " "
+                                    + cifry.substring(6, 9);
+                        }else{
+                            telefon = "*";
+                        }
+                    }
+                    if (!EMAIL_PATTERN.matcher(email).matches()) {
+                        email = Normalizer.normalize(email, Normalizer.Form.NFD)
+                                .replaceAll("\\p{InCombiningDiacriticalMarks}", "");
+                    }
+
+                    /*for (String col : cols) {
+                        System.out.println(col);
+                    }*/
+                    writer.write(jmeno+", "+prijmeni+", "+datum+", "+telefon+", "+email);
+                    writer.newLine();
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Chyba při čtení souboru:");
+            e.printStackTrace();
+        }
+    }
+}
+*/
