@@ -55,6 +55,19 @@ public class Main {
 }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 /*
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -158,6 +171,21 @@ public class Main {
 }
 /*
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /*
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -231,7 +259,7 @@ public class Main {
 
                     /*for (String col : cols) {
                         System.out.println(col);
-                    }*/
+                    }
                     writer.write(jmeno+", "+prijmeni+", "+datum+", "+telefon+", "+email);
                     writer.newLine();
                 }
