@@ -68,7 +68,7 @@ public class Main {
 
 
 
-/*
+
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
@@ -169,7 +169,6 @@ public class Main {
         return nfd.replaceAll("\\p{M}", "");
     }
 }
-/*
 
 
 
@@ -186,7 +185,8 @@ public class Main {
 
 
 
-/*
+
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.BufferedWriter;
@@ -270,4 +270,3 @@ public class Main {
         }
     }
 }
-*/
