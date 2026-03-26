@@ -270,3 +270,151 @@ public class Main {
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.text.Normalizer;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+
+public class Main {
+    public static void main(String[] args) {
+        Path input = Path.of("studenti_1000.csv");
+        Path output = Path.of("studenti_output.csv");
+
+        String delimiter = ",";
+
+        String czDatumRegex = "\\b([1-9]|[12][0-9]|3[01])\\.\\s([1-9]|1[0-2])\\.\\s\\d{4}\\b";
+        String mailRegex = "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$";
+
+        try {
+            List<String> lines = Files.readAllLines(input);
+            List<String> outputLines = new ArrayList<>();
+
+            for (String line : lines) {
+                String[] values = line.split(delimiter, -1);
+
+                for (int i = 0; i < values.length; i++) {
+                    String value = values[i].trim();
+
+                    if (value.matches(mailRegex)) {
+                        value = value.toLowerCase();
+                    }
+
+                    if (i == 2) { // pokud je řádek 3 (protože řádky začínají od 0)
+                        value = repairDate(value, czDatumRegex);
+                    }
+
+                    if (i == 3) { // pokud je řádek 4
+                        value = repairPhoneNumber(value);
+                    }
+
+                    if (i == 4) { // pokud je řádek 5
+                        String convertedString = Normalizer
+                                .normalize(value, Normalizer.Form.NFD)
+                                .replaceAll("[^\\p{ASCII}]", "");
+
+                        value = convertedString;
+
+                        Pattern patternMailu = Pattern.compile("@");
+                        Matcher matcher = patternMailu.matcher(value);
+
+                        if (!matcher.find()) {
+                            value = "#ERROR!";
+                        }
+                    }
+
+                    values[i] = value;
+                }
+
+                // java.nio: tohle přepíše soubor, kdyžtak se ptejte AI
+                String newLine = String.join(delimiter, values);
+                outputLines.add(newLine);
+            }
+
+            Files.write(output, outputLines);
+
+            System.out.println("Output: " + output.toAbsolutePath());
+
+        } catch (IOException e) {
+            System.err.println("Error: " + e.getMessage());
+        }
+    }
+
+    private static String repairDate(String dateString, String czDatumRegex) {
+        if (dateString == null || dateString.isEmpty()) {
+            return dateString;
+        }
+
+        if (dateString.matches(czDatumRegex)) {
+            return dateString;
+        }
+
+        Pattern patternDatum = Pattern.compile("(\\d+)[.\\s/\\-]+(\\d+)[.\\s/\\-]+(\\d+)");
+        Matcher matcher = patternDatum.matcher(dateString);
+
+        if (matcher.find()) {
+            int num1 = Integer.parseInt(matcher.group(1));
+            int num2 = Integer.parseInt(matcher.group(2));
+            int num3 = Integer.parseInt(matcher.group(3));
+
+            int day, month, year;
+
+            if (num1 > 31) {
+                year = num1; month = num2; day = num3;
+            } else if (num2 > 31) {
+                year = num2; day = num1; month = num3;
+            } else if (num3 > 31) {
+                year = num3; day = num1; month = num2;
+            } else {
+                day = num1; month = num2; year = num3;
+            }
+
+            if (month > 12 && day <= 12) {
+                int temp = day;
+                day = month;
+                month = temp;
+            }
+
+            return day + ". " + month + ". " + year;
+        }
+
+        return dateString;
+    }
+
+    private static String repairPhoneNumber(String phoneNumber) {
+        if (phoneNumber == null || phoneNumber.isEmpty()) {
+            return "#ERROR!";
+        }
+
+        phoneNumber = phoneNumber.trim();
+
+        if (phoneNumber.matches("\\d{3} \\d{3} \\d{3}")) {
+            return phoneNumber;
+        }
+
+        if (phoneNumber.matches("\\d{3}-\\d{3}-\\d{3}")) {
+            return phoneNumber.replace("-", " ");
+        }
+
+        if (!phoneNumber.matches("\\d+")) {
+            return "#ERROR!";
+        }
+
+        return "#ERROR!";
+    }
+}
